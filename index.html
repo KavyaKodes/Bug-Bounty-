@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Buggit Levels – Illusory Price & JSON Alchemist</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    .level {
+      border: 1px solid #333;
+      padding: 16px;
+      border-radius: 6px;
+      margin-bottom: 24px;
+      background: #181818;
+    }
+    .ui-row {
+      margin: 12px 0;
+    }
+    .messages {
+      border: 1px solid #333;
+      padding: 10px;
+      margin-top: 12px;
+      height: 120px;
+      overflow-y: auto;
+      background: #000;
+      color: #ddd;
+      font-size: 14px;
+    }
+    button {
+      padding: 8px 14px;
+      margin-right: 8px;
+      cursor: pointer;
+    }
+    .muted {
+      color: #aaa;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .flag {
+      color: #00ff66;
+      font-weight: bold;
+    }
+    .hintBox {
+      background: #222;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Buggit – Custom Challenges</h1>
+
+<!-- ====================== LEVEL 1 – THE ILLUSORY PRICE ====================== -->
+
+<section class="level locked" id="level1">
+  <h2>Level 1 — The Illusory Price</h2>
+  <div class="muted">
+    The price is just a number in your browser.
+  </div>
+
+  <div class="ui-row">
+    <h3>Golden Flag</h3>
+    <p>Price: <span id="item_price">$1000</span></p>
+    <p>Your Balance: $50</p>
+    <!-- Note: disabled doesn't matter if attacker uses console -->
+    <button onclick="window.buggit_shop.buyItem()" disabled>Buy Now</button>
+  </div>
+
+  <div class="messages" id="shop_log"></div>
+
+  <div class="ui-row">
+    <div class="hintBox">
+      <small>
+        Hint: The server trusts the price from your browser. Can you change the price
+        in the DOM or the function argument?
+      </small>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== LEVEL 7 – THE JSON ALCHEMIST ====================== -->
+
+<section class="level locked" id="level7">
+  <h2>Level 7 — The JSON Alchemist</h2>
+  <div class="muted">
+    The backend blindly trusts every property you send.
+  </div>
+
+  <div class="ui-row">
+    <button onclick="window.triggerUpdate()">Update Profile (Standard)</button>
+  </div>
+
+  <div class="messages" id="json_log"></div>
+
+  <div class="ui-row">
+    <div id="hint-json" class="hintBox">
+      <small>
+        Hint: Manually call <code>window.api.updateUser()</code> with an object
+        containing <code>role: "admin"</code>.
+      </small>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== JAVASCRIPT FOR BOTH LEVELS ====================== -->
+
+<script>
+// ---------------- LEVEL 1 — THE ILLUSORY PRICE ----------------
+(function level1Init() {
+  const logBox = document.getElementById("shop_log");
+
+  function shop_log(msg) {
+    logBox.innerHTML += `<div>${msg}</div>`;
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  const userState = {
+    balance: 50
+  };
+
+  window.buggit_shop = {
+    // The vulnerable function
+    buyItem: function(priceOverride) {
+      // If no override provided, grab from HTML (Client-side trust)
+      let price = priceOverride;
+      if (price === undefined) {
+        const priceText = document.getElementById("item_price").innerText;
+        price = parseInt(priceText.replace('$', ''));
+      }
+
+      shop_log(`Attempting to buy item for $${price}...`);
+
+      if (price > userState.balance) {
+        shop_log("Error: Insufficient Funds.");
+        return;
+      }
+
+      // Simulate Server Check
+      if (price < 1000) {
+        shop_log(`<span class="flag">Success! FLAG{CLIENT_SIDE_IS_NOT_SECURITY}</span>`);
+      } else {
+        shop_log("You bought it full price... wait, how did you get this money?");
+      }
+    }
+  };
+})();
+
+// ---------------- LEVEL 7 — THE JSON ALCHEMIST ----------------
+(function level7Init() {
+  const logBox = document.getElementById("json_log");
+
+  function json_log(msg) {
+    logBox.innerHTML += `<div>${msg}</div>`;
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  // The Server-Side User Object (Hidden state)
+  let userRecord = {
+    id: 999,
+    name: "Guest",
+    role: "user", // The target
+    balance: 0
+  };
+
+  window.api = {
+    updateUser: function(payload) {
+      json_log(`Sending JSON payload: ${JSON.stringify(payload)}`);
+
+      // VULNERABILITY: Mass Assignment
+      // The backend blindly merges the payload into the user record
+      Object.assign(userRecord, payload);
+
+      // Check privileges after update
+      if (userRecord.role === "admin") {
+        json_log(`<span class="flag">FLAG{JSON_MASS_ASSIGNMENT_MASTER}</span>`);
+      } else {
+        json_log(
+          `Update successful. Current Role: ${userRecord.role} (Needs 'admin')`
+        );
+      }
+    }
+  };
+
+  window.triggerUpdate = function() {
+    // The UI only sends the name
+    window.api.updateUser({ name: "Student" });
+  };
+})();
+</script>
+
+</body>
+</html>

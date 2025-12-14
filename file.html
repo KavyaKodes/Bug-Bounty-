@@ -1,0 +1,51 @@
+<section class="level locked" id="level1">
+    <h2>Level 1 — The Illusory Price</h2>
+    <div class="muted">The price is just a number in your browser.</div>
+    <div class="ui-row">
+        <h3>Golden Flag</h3>
+        <p>Price: <span id="item_price">$1000</span></p>
+        <p>Your Balance: $50</p>
+        <button onclick="window.buggit_shop.buyItem()" disabled>Buy Now</button>
+    </div>
+    <div class="messages" id="shop_log" style="border:1px solid #333; padding:10px; margin-top:12px; height:100px; overflow-y:auto; background:#111; color:#ddd;"></div>
+</section>
+
+<script>
+(function level1Init() {
+    const logBox = document.getElementById("shop_log");
+    function shop_log(msg) {
+        logBox.innerHTML += `<div>${msg}</div>`;
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    const userState = {
+        balance: 50
+    };
+
+    window.buggit_shop = {
+        // The vulnerable function
+        buyItem: function(priceOverride) {
+            // If no override provided, grab from HTML (Client-side trust)
+            let price = priceOverride; 
+            if (price === undefined) {
+                 const priceText = document.getElementById("item_price").innerText;
+                 price = parseInt(priceText.replace('$', ''));
+            }
+
+            shop_log(`Attempting to buy item for $${price}...`);
+
+            if (price > userState.balance) {
+                shop_log("Error: Insufficient Funds.");
+                return;
+            }
+
+            // Simulate Server Check
+            if (price < 1000) {
+                 shop_log(`<span class="flag" style="color:green;">Success! FLAG{CLIENT_SIDE_IS_NOT_SECURITY}</span>`);
+            } else {
+                 shop_log("You bought it full price... wait, how did you get this money?");
+            }
+        }
+    };
+})();
+</script>
