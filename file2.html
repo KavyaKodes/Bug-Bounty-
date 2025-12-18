@@ -115,7 +115,8 @@
 
                     // Check privileges after update
                     if (userRecord.role === "admin") {
-                        json_log(`<span class="flag">FLAG{JSON_MASS_ASSIGNMENT_MASTER}</span>`);
+                        json_log("✅ Role changed to ADMIN. Privileged access granted.");
+
                     } else {
                         json_log(`Update successful.`);
                         json_log(`Current Role: ${userRecord.role} (Access Denied - Admin Required)`);
@@ -130,4 +131,5 @@
         })();
     </script>
 </body>
+
 </html>
