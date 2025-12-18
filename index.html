@@ -147,7 +147,8 @@
 
       // Simulate Server Check
       if (price < 1000) {
-        shop_log(`<span class="flag">Success! FLAG{CLIENT_SIDE_IS_NOT_SECURITY}</span>`);
+        shop_log("✅ Purchase successful! Item unlocked.");
+
       } else {
         shop_log("You bought it full price... wait, how did you get this money?");
       }
@@ -182,7 +183,8 @@
 
       // Check privileges after update
       if (userRecord.role === "admin") {
-        json_log(`<span class="flag">FLAG{JSON_MASS_ASSIGNMENT_MASTER}</span>`);
+        json_log("✅ Role changed to ADMIN. Privileged access granted.");
+
       } else {
         json_log(
           `Update successful. Current Role: ${userRecord.role} (Needs 'admin')`
@@ -200,3 +202,4 @@
 
 </body>
 </html>
+
