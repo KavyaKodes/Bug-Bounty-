@@ -41,11 +41,13 @@
 
             // Simulate Server Check
             if (price < 1000) {
-                 shop_log(`<span class="flag" style="color:green;">Success! FLAG{CLIENT_SIDE_IS_NOT_SECURITY}</span>`);
+                 shop_log("✅ Purchase successful! Item unlocked.");
+
             } else {
                  shop_log("You bought it full price... wait, how did you get this money?");
             }
         }
     };
 })();
+
 </script>
